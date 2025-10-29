@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # 1. The PostgreSQL Database Container
+  postgres_db:
+    image: postgres:14-alpine
+    container_name: dating_db_container
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpass
+      POSTGRES_DB: datingapp_db
+    # Port mapping is for YOUR machine to access the DB, not for Flask!
+    ports:
+      - "5432:5432" 
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - default
+
+  # 2. The Flask API Container
+  web_app:
+    build: .
+    container_name: flask_api_container
+    restart: unless-stopped
+    # Expose Flask API to the outside world
+    ports:
+      - "5000:5000" 
+    depends_on:
+      - postgres_db # Ensures the DB starts before the app
+    environment:
+      # Pass the service name to the Flask app for connection
+      POSTGRES_HOST: postgres_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpass
+      POSTGRES_DB: datingapp_db
+    networks:
+      - default
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    driver: bridge
